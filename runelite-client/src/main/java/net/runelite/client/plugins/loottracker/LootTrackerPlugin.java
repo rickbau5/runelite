@@ -713,7 +713,8 @@ public class LootTrackerPlugin extends Plugin
 			quantity,
 			gePrice,
 			haPrice,
-			ignored);
+			ignored,
+			false); // TODO: is this correct?
 	}
 
 	private LootTrackerItem[] buildEntries(final Collection<ItemStack> itemStacks)

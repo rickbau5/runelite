@@ -196,7 +196,7 @@ class LootTrackerBox extends JPanel
 				LootTrackerItem i = items.get(idx);
 				if (item.getId() == i.getId())
 				{
-					items.set(idx, new LootTrackerItem(i.getId(), i.getName(), i.getQuantity() + item.getQuantity(), i.getGePrice(), i.getHaPrice(), i.isIgnored()));
+					items.set(idx, new LootTrackerItem(i.getId(), i.getName(), i.getQuantity() + item.getQuantity(), i.getGePrice(), i.getHaPrice(), i.isIgnored(), i.isFilteredOut()));
 					continue outer;
 				}
 			}
@@ -275,6 +275,8 @@ class LootTrackerBox extends JPanel
 			items = items.stream().filter(item -> !item.isIgnored()).collect(Collectors.toList());
 		}
 
+		items = items.stream().filter(item -> !item.isFilteredOut()).collect(Collectors.toList());
+
 		boolean isHidden = items.isEmpty();
 		setVisible(!isHidden);
 
@@ -324,7 +326,7 @@ class LootTrackerBox extends JPanel
 					itemImage.onLoaded(addTransparency);
 					addTransparency.run();
 				}
-				else
+				else if (!item.isFilteredOut())
 				{
 					itemImage.addTo(imageLabel);
 				}

@@ -39,6 +39,8 @@ class LootTrackerItem
 	private final int haPrice;
 	@Setter
 	private boolean ignored;
+	@Setter
+	private boolean filteredOut;
 
 	long getTotalGePrice()
 	{
