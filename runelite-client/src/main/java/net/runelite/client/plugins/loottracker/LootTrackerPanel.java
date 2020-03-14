@@ -86,6 +86,8 @@ class LootTrackerPanel extends PluginPanel
 	private static final ImageIcon COLLAPSE_ICON;
 	private static final ImageIcon EXPAND_ICON;
 	private static final ImageIcon SEARCH_ICON;
+	private static final ImageIcon SEARCH_ICON_FADED;
+	private static final ImageIcon SEARCH_ICON_HOVER;
 
 	private static final String HTML_LABEL_TEMPLATE =
 		"<html><body style='color:%s'>%s<span style='color:white'>%s</span></body></html>";
@@ -133,6 +135,7 @@ class LootTrackerPanel extends PluginPanel
 	private boolean hideIgnoredItems;
 	private String currentView;
 	private LootRecordType currentType;
+	private String lastSearch = "";
 
 	static
 	{
@@ -165,7 +168,9 @@ class LootTrackerPanel extends PluginPanel
 		COLLAPSE_ICON = new ImageIcon(collapseImg);
 		EXPAND_ICON = new ImageIcon(expandedImg);
 
-		SEARCH_ICON = new ImageIcon(searchImg);
+		SEARCH_ICON = new ImageIcon(ImageUtil.alphaOffset(searchImg, 100));
+		SEARCH_ICON_FADED = new ImageIcon(ImageUtil.alphaOffset(searchImg, 0));
+		SEARCH_ICON_HOVER = new ImageIcon(ImageUtil.alphaOffset(searchImg, -25));
 	}
 
 	LootTrackerPanel(final LootTrackerPlugin plugin, final ItemManager itemManager, final LootTrackerConfig config)
@@ -238,15 +243,17 @@ class LootTrackerPanel extends PluginPanel
 		viewControls.add(viewHiddenBtn);
 
 		SwingUtil.removeButtonDecorations(searchBtn);
-		searchBtn.setIcon(SEARCH_ICON);
+		searchBtn.setIcon(SEARCH_ICON_FADED);
+		searchBtn.setRolloverIcon(SEARCH_ICON_HOVER);
+		searchBtn.setSelectedIcon(SEARCH_ICON);
+		searchBtn.setUI(new BasicToggleButtonUI());
 		searchBtn.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-		searchBtn.setToolTipText("Search loot for item.");
-		searchBtn.setUI(new BasicToggleButtonUI()); // substance breaks the layout and the pressed icon
-		searchBtn.addActionListener(e -> System.out.println("hello"));
+		searchBtn.addActionListener(e -> changeSearchState(!searchBtn.isSelected()));
+		SwingUtil.addModalTooltip(searchBtn, "Show search box", "Hide search box");
+		changeSearchState(false);
 		viewControls.add(searchBtn);
 
 		searchBar.setIcon(IconTextField.Icon.SEARCH);
-		//searchBar.setPreferredSize(new Dimension(PluginPanel.PANEL_WIDTH - 20, 30));
 		searchBar.setBackground(ColorScheme.DARKER_GRAY_COLOR);
 		searchBar.setHoverBackgroundColor(ColorScheme.DARK_GRAY_HOVER_COLOR);
 		searchBar.setBorder(BorderFactory.createCompoundBorder(
@@ -479,6 +486,26 @@ class LootTrackerPanel extends PluginPanel
 		}
 
 		updateCollapseText();
+	}
+
+	/**
+	 * Change the state of the search box, storing/restoring the search value.
+	 */
+	private void changeSearchState(boolean show)
+	{
+		if (show)
+		{
+			searchBar.setText(lastSearch);
+		}
+		else {
+			lastSearch = searchBar.getText();
+			searchBar.setText("");
+		}
+
+		searchBar.setVisible(show);
+		searchBtn.setSelected(show);
+
+		rebuild();
 	}
 
 	/**
