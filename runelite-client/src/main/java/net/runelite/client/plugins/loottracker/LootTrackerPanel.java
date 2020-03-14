@@ -117,7 +117,7 @@ class LootTrackerPanel extends PluginPanel
 
 	// Search
 	private final JButton searchBtn = new JButton();
-	private final IconTextField searchBar;
+	private final IconTextField searchBar = new IconTextField();
 
 	// Aggregate of all kills
 	private final List<LootTrackerRecord> aggregateRecords = new ArrayList<>();
@@ -245,7 +245,6 @@ class LootTrackerPanel extends PluginPanel
 		searchBtn.addActionListener(e -> System.out.println("hello"));
 		viewControls.add(searchBtn);
 
-		searchBar = new IconTextField();
 		searchBar.setIcon(IconTextField.Icon.SEARCH);
 		//searchBar.setPreferredSize(new Dimension(PluginPanel.PANEL_WIDTH - 20, 30));
 		searchBar.setBackground(ColorScheme.DARKER_GRAY_COLOR);
@@ -254,25 +253,25 @@ class LootTrackerPanel extends PluginPanel
 				BorderFactory.createMatteBorder(5, 0, 0, 0, ColorScheme.DARK_GRAY_COLOR),
 				BorderFactory.createEmptyBorder(8, 10, 8, 10)
 		));
-		searchBar.addActionListener(e -> onSearchBarChanged());
+		searchBar.addActionListener(e -> rebuild());
 		searchBar.getDocument().addDocumentListener(new DocumentListener()
 		{
 			@Override
 			public void insertUpdate(DocumentEvent e)
 			{
-				onSearchBarChanged();
+				rebuild();
 			}
 
 			@Override
 			public void removeUpdate(DocumentEvent e)
 			{
-				onSearchBarChanged();
+				rebuild();
 			}
 
 			@Override
 			public void changedUpdate(DocumentEvent e)
 			{
-				onSearchBarChanged();
+				rebuild();
 			}
 		});
 
@@ -403,6 +402,19 @@ class LootTrackerPanel extends PluginPanel
 		{
 			subTitle = actorLevel > -1 ? "(lvl-" + actorLevel + ")" : "";
 		}
+
+		String filter = searchBar.getText().toLowerCase();
+		for (LootTrackerItem item : items) {
+			if (filter.isEmpty())
+			{
+				item.setFilteredOut(false);
+				continue;
+			}
+
+			boolean matchesFilter = item.getName().toLowerCase().contains(filter);
+			item.setFilteredOut(!matchesFilter);
+		}
+
 		final LootTrackerRecord record = new LootTrackerRecord(eventName, subTitle, type, items, 1);
 		sessionRecords.add(record);
 
@@ -493,6 +505,22 @@ class LootTrackerPanel extends PluginPanel
 	{
 		SwingUtil.fastRemoveAll(logsContainer);
 		boxes.clear();
+
+		String filter = searchBar.getText().toLowerCase();
+		for (LootTrackerRecord record : concat(aggregateRecords, sessionRecords))
+		{
+			for (LootTrackerItem item : record.getItems())
+			{
+				if (filter.isEmpty())
+				{
+					item.setFilteredOut(false);
+					continue;
+				}
+
+				boolean matchesFilter = item.getName().toLowerCase().contains(filter);
+				item.setFilteredOut(!matchesFilter);
+			}
+		}
 
 		if (groupLoot)
 		{
@@ -681,23 +709,5 @@ class LootTrackerPanel extends PluginPanel
 	{
 		final String valueStr = QuantityFormatter.quantityToStackSize(value);
 		return String.format(HTML_LABEL_TEMPLATE, ColorUtil.toHexColor(ColorScheme.LIGHT_GRAY_COLOR), key, valueStr);
-	}
-
-	private void onSearchBarChanged() {
-		String filter = searchBar.getText().toLowerCase();
-
-		for (LootTrackerRecord record : concat(aggregateRecords, sessionRecords)) {
-			for (LootTrackerItem item : record.getItems()) {
-				if (filter.isEmpty()) {
-					item.setFilteredOut(false);
-					continue;
-				}
-
-				boolean matchesFilter = item.getName().toLowerCase().contains(filter);
-				item.setFilteredOut(!matchesFilter);
-			}
-		}
-
-		rebuild();
 	}
 }
